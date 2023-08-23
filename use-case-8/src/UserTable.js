@@ -15,8 +15,8 @@ function UserTable() {
         </tr>
       </thead>
       <tbody>
-        {users.map((user, index) => (
-          <tr key={index}>
+        {users.map((user) => (
+          <tr key={`${user.firstName}-${user.lastName}-${user.email}`}>
             <td>{user.firstName}</td>
             <td>{user.lastName}</td>
             <td>{user.email}</td>
