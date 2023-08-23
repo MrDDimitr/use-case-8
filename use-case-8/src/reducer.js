@@ -24,9 +24,12 @@ const userSlice = createSlice({
     },
     setMessage: (state, action) => {
       state.message = action.payload;
+    },
+    resetForm: (state) => {
+        return initialState;
     }
   }
 });
 
-export const { setFirstName, setLastName, setEmail, setMessage } = userSlice.actions;
+export const { setFirstName, setLastName, setEmail, setMessage, resetForm } = userSlice.actions;
 export default userSlice.reducer;
