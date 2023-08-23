@@ -1,0 +1,113 @@
+•	Create new repository. Use main branch for your commits. Make sure to make first commit C#1 with README.md, as time of this commit will be considered as project start. Add commit message “UC#1 Start”.
+
+What means that
+
+ChatGPT
+The given instruction outlines the initial steps for setting up a new repository (commonly on a version control platform like GitHub or GitLab). Let's break down the instructions:
+
+Create new repository: Begin by establishing a new repository. If this were on GitHub, for instance, you'd navigate to your profile, click on 'Repositories', then click on 'New'.
+
+Use main branch for your commits: Traditionally, the primary branch in Git was called master. However, many platforms and organizations are transitioning to use main as the default primary branch. The instruction indicates that you should make your commits directly to this main branch.
+
+Make sure to make first commit C#1 with README.md: Your very first commit in this new repository should involve creating (or adding to) a file named README.md. The label C#1 might be an internal identifier or code to refer to this specific commit. In general, you don't label commits in Git with codes like this, but it could be a convention used in a specific organization or for the context of the given task.
+
+as time of this commit will be considered as project start: This instruction emphasizes that the timestamp of this initial commit will be regarded as the official start of the project. This could be important for project tracking, billing, or any number of other administrative reasons.
+
+Add commit message “UC#1 Start”: When you commit the changes (i.e., the addition of README.md), you're instructed to use a specific commit message: UC#1 Start. Commit messages are short descriptions that help in understanding the changes made in that commit. UC#1 might be shorthand for "Use Case #1" or another identifier.
+
+To execute this in Git commands, it would look something like this:
+
+bash
+Copy code
+# Navigate to your project directory
+cd path/to/your/project
+
+# Initialize a new Git repository
+git init
+
+# Create or edit README.md file
+echo "Project Description" > README.md
+
+# Add the README.md to staging area
+git add README.md
+
+# Commit the changes with the specified message
+git commit -m "UC#1 Start"
+
+# If you're using a remote repository (e.g., on GitHub), you'd also push the changes:
+# First, add the remote repository
+# git remote add origin [URL of your repository on GitHub]
+# Then, push the changes to the main branch
+# git push -u origin main
+Remember, if you're using a platform like GitHub, there are also user-friendly GUIs available that can help perform these tasks if you're not comfortable with the command line.
+
+
+
+
+User
+•	Bind SonarCloud.io to created repository. - 
+
+How to bind SonarCloud? I do not have experience, tel lme
+ChatGPT
+SonarCloud is a cloud-based platform that provides continuous inspection of your code quality, identifying bugs, vulnerabilities, and code smells in your projects. It's often used to ensure that software is being developed following best practices for code quality and security.
+
+To bind a repository to SonarCloud, follow these steps:
+
+Create an Account on SonarCloud:
+
+Go to SonarCloud.io.
+Click on the “Log in” button. You can sign up using your GitHub, Bitbucket, or Azure DevOps credentials.
+Set Up a New Project:
+
+After logging in, on the SonarCloud dashboard, click on the + icon in the top right and select "Analyze new project".
+Choose the platform where your repository is (e.g., GitHub, Bitbucket, Azure DevOps).
+If prompted, grant SonarCloud the necessary permissions to access your repositories on the selected platform.
+Once permissions are granted, you will see a list of your repositories. Choose the one you want to analyze with SonarCloud and click on "Set Up".
+Configure Analysis:
+
+SonarCloud will provide you with some configuration details. Depending on your repository's language and platform, you'll need to follow the provided instructions. For many projects, this involves adding a sonar-project.properties file to your repo or configuring CI/CD pipeline steps.
+Run Analysis:
+
+After setting up, you'll need to run the analysis. This might involve triggering a CI/CD pipeline job or running a local analysis using the SonarScanner tool, which then sends the results to SonarCloud. The exact steps will depend on your setup and the language/framework of your project.
+View Results:
+
+After the analysis is complete, you can view the results on the SonarCloud dashboard. It will give you insights into code quality, potential bugs, vulnerabilities, and other metrics.
+Integrate with your CI/CD (Optional but Recommended):
+
+For continuous inspection, you can integrate SonarCloud into your CI/CD pipeline. This way, every time you push changes or create pull requests, SonarCloud can automatically analyze the code and provide feedback.
+Remember:
+
+Ensure that your repository's visibility settings and SonarCloud's permissions are set correctly, so the platform can access and analyze your code.
+If you work in a team, you can also configure permissions in SonarCloud to specify who can view and manage the analysis results.
+Finally, SonarCloud offers comprehensive documentation, and they have a community forum for any questions or issues you might encounter. If you're setting this up for a professional team or large project, it might be worth spending some time getting familiar with all of SonarCloud's features and best practices.
+
+
+
+
+User
+Still I do not understand good - •	Commit C#2 with message “UC#1 Infrastructure setup”.
+
+Do I have to rename the commit?
+ChatGPT
+No, you don't "rename" a commit. What the instruction Commit C#2 with message “UC#1 Infrastructure setup” means is that you should make another commit (after your first one) and label the commit message as “UC#1 Infrastructure setup”.
+
+The term "C#2" is likely just an identifier for your reference to understand the sequence of the commits you're expected to make. It's not something you'd directly put into Git. Git does not use custom labels or codes for commits like "C#1" or "C#2"; instead, it uses unique SHA-1 hashes to identify each commit.
+
+The steps to achieve this after you've made changes for your infrastructure setup would be:
+
+Stage your changes (assuming you're in the root directory of your project):
+
+bash
+Copy code
+git add .
+Commit the changes with the given commit message:
+
+bash
+Copy code
+git commit -m "UC#1 Infrastructure setup"
+If you're working with a remote repository (like on GitHub), you'd push this commit to the repository:
+
+bash
+Copy code
+git push
+So, the essence is: you're not renaming any commit. Instead, you're creating a new commit with a specified message.
