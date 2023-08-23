@@ -1,0 +1,866 @@
+We have to implement unit tests for React application, whichis created with create-react-app. Here is one file from the application:
+
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import validator from 'validator';
+import { setFirstName, setLastName, setEmail, setMessage, resetForm, addUser } from './reducer';
+
+const UserForm = () => {
+  const dispatch = useDispatch();
+  const userData = useSelector(state => state.currentUser);  // get the user data from Redux store
+
+  // Local state for form errors
+  const [formErrors, setFormErrors] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    message: ''
+  });
+
+  const isFormValid = () => {
+    return !Object.values(formErrors).some(error => error) &&
+           Object.values(userData).every(data => data);
+  };
+
+  const handleChange = (e, setFunc) => {
+    const { value } = e.target;
+    dispatch(setFunc(value));  // using the action to set individual field data
+    validateField(e.target.name, value);
+  };
+
+  const validateField = (name, value) => {
+    let errors = { ...formErrors };
+    switch (name) {
+      case 'firstName':
+      case 'lastName':
+        errors[name] = !validator.isLength(value, { min: 2 }) ? 'Must be at least 2 characters' : '';
+        break;
+      case 'email':
+        errors[name] = !validator.isEmail(value) ? 'Invalid email address' : '';
+        break;
+      case 'message':
+        errors[name] = !validator.isLength(value, { min: 10 }) ? 'Must be at least 10 characters' : '';
+        break;
+      default:
+        break;
+    }
+    setFormErrors(errors);
+  };
+
+  const handleSubmit = e => {
+    e.preventDefault();
+    if (isFormValid()) {
+      console.log('Submitted data:', userData); // Do something with the data
+      dispatch(addUser())
+      dispatch(resetForm()); // Resetting the form data in the store
+      setFormErrors({
+        firstName: '',
+        lastName: '',
+        email: '',
+        message: ''
+      });
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input type="text" name="firstName" value={userData.firstName} onChange={(e) => handleChange(e, setFirstName)} placeholder="First Name" />
+      {formErrors.firstName && <span>{formErrors.firstName}</span>}
+
+      <input type="text" name="lastName" value={userData.lastName} onChange={(e) => handleChange(e, setLastName)} placeholder="Last Name" />
+      {formErrors.lastName && <span>{formErrors.lastName}</span>}
+
+      <input type="email" name="email" value={userData.email} onChange={(e) => handleChange(e, setEmail)} placeholder="Email" />
+      {formErrors.email && <span>{formErrors.email}</span>}
+
+      <textarea name="message" value={userData.message} onChange={(e) => handleChange(e, setMessage)} placeholder="Message"></textarea>
+      {formErrors.message && <span>{formErrors.message}</span>}
+
+      <button type="submit" disabled={!isFormValid()}>Submit</button>
+    </form>
+  );
+};
+
+export default UserForm;
+
+
+Write me unit tests
+
+ChatGPT
+Certainly! I'll help you create unit tests for the UserForm component. We'll be using the @testing-library/react and @testing-library/jest-dom libraries, which are commonly used for testing React components. If you haven't installed these libraries, please do so:
+
+scss
+Copy code
+npm install --save-dev @testing-library/react @testing-library/jest-dom
+Here are some unit tests for your UserForm component:
+
+jsx
+Copy code
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { Provider } from 'react-redux';
+import { createStore } from 'redux';
+import reducer from './reducer'; // Assuming the reducer is exported from this file
+import UserForm from './UserForm';
+import '@testing-library/jest-dom';
+
+// Mock store
+const store = createStore(reducer);
+
+const renderWithRedux = (component) => {
+  return {
+    ...render(<Provider store={store}>{component}</Provider>)
+  };
+};
+
+describe('UserForm', () => {
+  test('renders form with correct fields', () => {
+    renderWithRedux(<UserForm />);
+    
+    expect(screen.getByPlaceholderText('First Name')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Last Name')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Email')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Message')).toBeInTheDocument();
+    expect(screen.getByText('Submit')).toBeInTheDocument();
+  });
+
+  test('displays validation error for first name when length < 2', () => {
+    renderWithRedux(<UserForm />);
+    fireEvent.change(screen.getByPlaceholderText('First Name'), {
+      target: { value: 'A' },
+    });
+    
+    expect(screen.getByText('Must be at least 2 characters')).toBeInTheDocument();
+  });
+
+  test('displays validation error for email when it is invalid', () => {
+    renderWithRedux(<UserForm />);
+    fireEvent.change(screen.getByPlaceholderText('Email'), {
+      target: { value: 'invalid-email' },
+    });
+    
+    expect(screen.getByText('Invalid email address')).toBeInTheDocument();
+  });
+
+  test('displays validation error for message when length < 10', () => {
+    renderWithRedux(<UserForm />);
+    fireEvent.change(screen.getByPlaceholderText('Message'), {
+      target: { value: 'Short' },
+    });
+    
+    expect(screen.getByText('Must be at least 10 characters')).toBeInTheDocument();
+  });
+
+  test('disables submit button when form is invalid', () => {
+    renderWithRedux(<UserForm />);
+    expect(screen.getByText('Submit')).toBeDisabled();
+  });
+
+  // You can add more tests as required.
+});
+Please note:
+
+Mocking the store is a simplified version, in a real-world scenario you might want to make it more sophisticated.
+I have not written the test for checking if form submission works and redux actions are dispatched, since mocking and testing such actions would make the example longer. Consider using tools like redux-mock-store if you want to fully test dispatches.
+These tests cover basic rendering and functionality, but you might want to expand upon them based on the specifics of your application and your requirements.
+
+
+
+User
+now I have other task - o	Create Unit tests for the state/or you can cover it with integration tests (components + state)
+
+Here are the components:
+
+UserForm.js
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import validator from 'validator';
+import { setFirstName, setLastName, setEmail, setMessage, resetForm, addUser } from './reducer';
+
+const UserForm = () => {
+  const dispatch = useDispatch();
+  const userData = useSelector(state => state.currentUser);  // get the user data from Redux store
+
+  // Local state for form errors
+  const [formErrors, setFormErrors] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    message: ''
+  });
+
+  const isFormValid = () => {
+    return !Object.values(formErrors).some(error => error) &&
+           Object.values(userData).every(data => data);
+  };
+
+  const handleChange = (e, setFunc) => {
+    const { value } = e.target;
+    dispatch(setFunc(value));  // using the action to set individual field data
+    validateField(e.target.name, value);
+  };
+
+  const validateField = (name, value) => {
+    let errors = { ...formErrors };
+    switch (name) {
+      case 'firstName':
+      case 'lastName':
+        errors[name] = !validator.isLength(value, { min: 2 }) ? 'Must be at least 2 characters' : '';
+        break;
+      case 'email':
+        errors[name] = !validator.isEmail(value) ? 'Invalid email address' : '';
+        break;
+      case 'message':
+        errors[name] = !validator.isLength(value, { min: 10 }) ? 'Must be at least 10 characters' : '';
+        break;
+      default:
+        break;
+    }
+    setFormErrors(errors);
+  };
+
+  const handleSubmit = e => {
+    e.preventDefault();
+    if (isFormValid()) {
+      console.log('Submitted data:', userData); // Do something with the data
+      dispatch(addUser())
+      dispatch(resetForm()); // Resetting the form data in the store
+      setFormErrors({
+        firstName: '',
+        lastName: '',
+        email: '',
+        message: ''
+      });
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input type="text" name="firstName" value={userData.firstName} onChange={(e) => handleChange(e, setFirstName)} placeholder="First Name" />
+      {formErrors.firstName && <span>{formErrors.firstName}</span>}
+
+      <input type="text" name="lastName" value={userData.lastName} onChange={(e) => handleChange(e, setLastName)} placeholder="Last Name" />
+      {formErrors.lastName && <span>{formErrors.lastName}</span>}
+
+      <input type="email" name="email" value={userData.email} onChange={(e) => handleChange(e, setEmail)} placeholder="Email" />
+      {formErrors.email && <span>{formErrors.email}</span>}
+
+      <textarea name="message" value={userData.message} onChange={(e) => handleChange(e, setMessage)} placeholder="Message"></textarea>
+      {formErrors.message && <span>{formErrors.message}</span>}
+
+      <button type="submit" disabled={!isFormValid()}>Submit</button>
+    </form>
+  );
+};
+
+export default UserForm;
+
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import validator from 'validator';
+import { setFirstName, setLastName, setEmail, setMessage, resetForm, addUser } from './reducer';
+
+const UserForm = () => {
+  const dispatch = useDispatch();
+  const userData = useSelector(state => state.currentUser);  // get the user data from Redux store
+
+  // Local state for form errors
+  const [formErrors, setFormErrors] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    message: ''
+  });
+
+  const isFormValid = () => {
+    return !Object.values(formErrors).some(error => error) &&
+           Object.values(userData).every(data => data);
+  };
+
+  const handleChange = (e, setFunc) => {
+    const { value } = e.target;
+    dispatch(setFunc(value));  // using the action to set individual field data
+    validateField(e.target.name, value);
+  };
+
+  const validateField = (name, value) => {
+    let errors = { ...formErrors };
+    switch (name) {
+      case 'firstName':
+      case 'lastName':
+        errors[name] = !validator.isLength(value, { min: 2 }) ? 'Must be at least 2 characters' : '';
+        break;
+      case 'email':
+        errors[name] = !validator.isEmail(value) ? 'Invalid email address' : '';
+        break;
+      case 'message':
+        errors[name] = !validator.isLength(value, { min: 10 }) ? 'Must be at least 10 characters' : '';
+        break;
+      default:
+        break;
+    }
+    setFormErrors(errors);
+  };
+
+  const handleSubmit = e => {
+    e.preventDefault();
+    if (isFormValid()) {
+      console.log('Submitted data:', userData); // Do something with the data
+      dispatch(addUser())
+      dispatch(resetForm()); // Resetting the form data in the store
+      setFormErrors({
+        firstName: '',
+        lastName: '',
+        email: '',
+        message: ''
+      });
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input type="text" name="firstName" value={userData.firstName} onChange={(e) => handleChange(e, setFirstName)} placeholder="First Name" />
+      {formErrors.firstName && <span>{formErrors.firstName}</span>}
+
+      <input type="text" name="lastName" value={userData.lastName} onChange={(e) => handleChange(e, setLastName)} placeholder="Last Name" />
+      {formErrors.lastName && <span>{formErrors.lastName}</span>}
+
+      <input type="email" name="email" value={userData.email} onChange={(e) => handleChange(e, setEmail)} placeholder="Email" />
+      {formErrors.email && <span>{formErrors.email}</span>}
+
+      <textarea name="message" value={userData.message} onChange={(e) => handleChange(e, setMessage)} placeholder="Message"></textarea>
+      {formErrors.message && <span>{formErrors.message}</span>}
+
+      <button type="submit" disabled={!isFormValid()}>Submit</button>
+    </form>
+  );
+};
+
+export default UserForm;
+
+ChatGPT
+It seems like you provided the same UserForm component twice. I assume that was an oversight and that you intended to provide a different component for testing.
+
+Regardless, I'll provide an integration test approach that includes state and component interactions for the UserForm component. To do this, we'll also need to mock the Redux store to simulate state changes based on dispatched actions. Here's how you can achieve this:
+
+jsx
+Copy code
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { Provider } from 'react-redux';
+import { createStore } from 'redux';
+import reducer from './reducer'; // Assuming the reducer is exported from this file
+import UserForm from './UserForm';
+import '@testing-library/jest-dom';
+
+// Mock store
+const renderWithRedux = (component, { initialState, store = createStore(reducer, initialState) } = {}) => {
+  return {
+    ...render(<Provider store={store}>{component}</Provider>),
+    store
+  };
+};
+
+describe('UserForm Integration Test', () => {
+  test('fills out the form, validates, and simulates submission', () => {
+    renderWithRedux(<UserForm />);
+
+    // Simulate filling the form
+    fireEvent.change(screen.getByPlaceholderText('First Name'), {
+      target: { value: 'John' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('Last Name'), {
+      target: { value: 'Doe' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('Email'), {
+      target: { value: 'johndoe@email.com' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('Message'), {
+      target: { value: 'This is a message of more than ten characters.' },
+    });
+
+    // Check if there are no validation errors displayed
+    const errorMessages = [
+      "Must be at least 2 characters",
+      "Invalid email address",
+      "Must be at least 10 characters"
+    ];
+
+    errorMessages.forEach(message => {
+      expect(screen.queryByText(message)).not.toBeInTheDocument();
+    });
+
+    // Check if the submit button is enabled
+    expect(screen.getByText('Submit')).not.toBeDisabled();
+
+    // Simulate form submission (For the sake of this test, we won't check the actual submission, but you can enhance the test to do so.)
+    fireEvent.click(screen.getByText('Submit'));
+  });
+});
+Note: This test checks for validation when the form is correctly filled. You may want to add more tests that fill out the form incorrectly and check for validation errors.
+
+For integration tests that involve state, you might want to check the store's state to see if it gets updated correctly. Using the store returned from renderWithRedux, you can do something like:
+
+js
+Copy code
+const { store } = renderWithRedux(<UserForm />);
+...
+fireEvent.change(screen.getByPlaceholderText('First Name'), {
+  target: { value: 'John' },
+});
+...
+// Check if state was updated
+expect(store.getState().currentUser.firstName).toBe('John');
+This approach ensures that not only the UI updates correctly but also that the state in the Redux store gets updated as expected.
+
+
+
+
+User
+Actually yes, I made mistake. Here are the components:
+
+// src/reducer.js
+
+import { createSlice } from '@reduxjs/toolkit';
+
+const initialState = {
+    currentUser: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      message: ""
+    },
+    users: []
+  };
+
+  const userSlice = createSlice({
+    name: 'user',
+    initialState,
+    reducers: {
+      setFirstName: (state, action) => {
+        state.currentUser.firstName = action.payload;
+      },
+      setLastName: (state, action) => {
+        state.currentUser.lastName = action.payload;
+      },
+      setEmail: (state, action) => {
+        state.currentUser.email = action.payload;
+      },
+      setMessage: (state, action) => {
+        state.currentUser.message = action.payload;
+      },
+      addUser: (state) => {
+        state.users.push(state.currentUser);
+        state.currentUser = {
+          firstName: "",
+          lastName: "",
+          email: "",
+          message: ""
+        };
+      },
+      resetForm: (state) => {
+        state.currentUser = {
+          firstName: "",
+          lastName: "",
+          email: "",
+          message: ""
+        };
+      }
+    }
+  });
+
+  export const { 
+    setFirstName, setLastName, setEmail, setMessage, addUser, resetForm 
+  } = userSlice.actions;
+  
+  export default userSlice.reducer;
+
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import validator from 'validator';
+import { setFirstName, setLastName, setEmail, setMessage, resetForm, addUser } from './reducer';
+
+const UserForm = () => {
+  const dispatch = useDispatch();
+  const userData = useSelector(state => state.currentUser);  // get the user data from Redux store
+
+  // Local state for form errors
+  const [formErrors, setFormErrors] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    message: ''
+  });
+
+  const isFormValid = () => {
+    return !Object.values(formErrors).some(error => error) &&
+           Object.values(userData).every(data => data);
+  };
+
+  const handleChange = (e, setFunc) => {
+    const { value } = e.target;
+    dispatch(setFunc(value));  // using the action to set individual field data
+    validateField(e.target.name, value);
+  };
+
+  const validateField = (name, value) => {
+    let errors = { ...formErrors };
+    switch (name) {
+      case 'firstName':
+      case 'lastName':
+        errors[name] = !validator.isLength(value, { min: 2 }) ? 'Must be at least 2 characters' : '';
+        break;
+      case 'email':
+        errors[name] = !validator.isEmail(value) ? 'Invalid email address' : '';
+        break;
+      case 'message':
+        errors[name] = !validator.isLength(value, { min: 10 }) ? 'Must be at least 10 characters' : '';
+        break;
+      default:
+        break;
+    }
+    setFormErrors(errors);
+  };
+
+  const handleSubmit = e => {
+    e.preventDefault();
+    if (isFormValid()) {
+      console.log('Submitted data:', userData); // Do something with the data
+      dispatch(addUser())
+      dispatch(resetForm()); // Resetting the form data in the store
+      setFormErrors({
+        firstName: '',
+        lastName: '',
+        email: '',
+        message: ''
+      });
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input type="text" name="firstName" value={userData.firstName} onChange={(e) => handleChange(e, setFirstName)} placeholder="First Name" />
+      {formErrors.firstName && <span>{formErrors.firstName}</span>}
+
+      <input type="text" name="lastName" value={userData.lastName} onChange={(e) => handleChange(e, setLastName)} placeholder="Last Name" />
+      {formErrors.lastName && <span>{formErrors.lastName}</span>}
+
+      <input type="email" name="email" value={userData.email} onChange={(e) => handleChange(e, setEmail)} placeholder="Email" />
+      {formErrors.email && <span>{formErrors.email}</span>}
+
+      <textarea name="message" value={userData.message} onChange={(e) => handleChange(e, setMessage)} placeholder="Message"></textarea>
+      {formErrors.message && <span>{formErrors.message}</span>}
+
+      <button type="submit" disabled={!isFormValid()}>Submit</button>
+    </form>
+  );
+};
+
+export default UserForm;
+
+and the store
+
+// src/store.js
+
+import { configureStore } from '@reduxjs/toolkit';
+import reducer from './reducer';
+
+const store = configureStore({
+  reducer: reducer
+});
+
+export default store;
+
+We have to implement unit or integration tests
+ChatGPT
+Alright, to implement unit/integration tests for the given state and components, you'll typically use a combination of the react-testing-library and @reduxjs/toolkit's provided tools for testing, along with jest as the test runner.
+
+Here's how you can go about writing tests for the given components and state:
+
+1. Set Up Testing Libraries
+First, make sure to install the necessary testing libraries:
+
+scss
+Copy code
+npm install --save-dev @testing-library/react @testing-library/jest-dom @testing-library/user-event
+2. Writing Tests
+Let's start with reducer tests, and then move onto component tests:
+
+a. Reducer Tests (e.g., reducer.test.js):
+javascript
+Copy code
+import reducer, { setFirstName, setLastName, setEmail, setMessage, addUser, resetForm } from './reducer';
+
+describe('userSlice reducer', () => {
+    it('should handle initial state', () => {
+        expect(reducer(undefined, {})).toEqual({
+            currentUser: {
+                firstName: "",
+                lastName: "",
+                email: "",
+                message: ""
+            },
+            users: []
+        });
+    });
+
+    it('should handle setFirstName', () => {
+        expect(
+            reducer({ currentUser: { firstName: "" } }, {
+                type: setFirstName.type,
+                payload: "John"
+            })
+        ).toEqual({ currentUser: { firstName: "John" } });
+    });
+
+    // Similarly, you can write tests for setLastName, setEmail, setMessage...
+    
+    it('should handle addUser', () => {
+        const initialState = {
+            currentUser: {
+                firstName: "John",
+                lastName: "Doe",
+                email: "john@example.com",
+                message: "Hi there"
+            },
+            users: []
+        };
+
+        expect(
+            reducer(initialState, {
+                type: addUser.type
+            })
+        ).toEqual({
+            currentUser: {
+                firstName: "",
+                lastName: "",
+                email: "",
+                message: ""
+            },
+            users: [initialState.currentUser]
+        });
+    });
+
+    // Similarly, you can write tests for resetForm...
+});
+b. Component Tests (e.g., UserForm.test.js):
+javascript
+Copy code
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
+import reducer from './reducer';
+import UserForm from './UserForm';
+
+const renderWithRedux = (
+    component,
+    { initialState, store = configureStore({ reducer: { user: reducer }, preloadedState: initialState }) } = {}
+) => {
+    return {
+        ...render(<Provider store={store}>{component}</Provider>),
+        store,
+    }
+};
+
+describe('UserForm component', () => {
+    it('renders correctly', () => {
+        renderWithRedux(<UserForm />);
+        expect(screen.getByPlaceholderText('First Name')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Last Name')).toBeInTheDocument();
+        // ... other fields and buttons
+    });
+
+    it('updates the input value on change', () => {
+        renderWithRedux(<UserForm />);
+        fireEvent.change(screen.getByPlaceholderText('First Name'), { target: { value: 'John' } });
+        expect(screen.getByPlaceholderText('First Name').value).toBe('John');
+    });
+
+    // You can also test validations, form submissions, etc...
+});
+Remember that the above tests are basic examples, and depending on your application's needs, you might need to cover more cases or have more specific scenarios to test.
+
+Finally, to run the tests:
+
+bash
+Copy code
+npm test
+This should trigger Jest to run your tests and provide feedback. Ensure that you've set up Jest for your project; if not, create-react-app comes pre-configured with it.
+
+
+
+
+User
+import reducer, { setFirstName, setLastName, setEmail, setMessage, addUser, resetForm } from './reducer';
+
+describe('userSlice reducer', () => {
+    it('should handle initial state', () => {
+        expect(reducer(undefined, {})).toEqual({
+            currentUser: {
+                firstName: "",
+                lastName: "",
+                email: "",
+                message: ""
+            },
+            users: []
+        });
+    });
+
+    it('should handle setFirstName', () => {
+        expect(
+            reducer({ currentUser: { firstName: "" } }, {
+                type: setFirstName.type,
+                payload: "John"
+            })
+        ).toEqual({ currentUser: { firstName: "John" } });
+    });
+
+    // Similarly, you can write tests for setLastName, setEmail, setMessage...
+    
+    it('should handle addUser', () => {
+        const initialState = {
+            currentUser: {
+                firstName: "John",
+                lastName: "Doe",
+                email: "john@example.com",
+                message: "Hi there"
+            },
+            users: []
+        };
+
+        expect(
+            reducer(initialState, {
+                type: addUser.type
+            })
+        ).toEqual({
+            currentUser: {
+                firstName: "",
+                lastName: "",
+                email: "",
+                message: ""
+            },
+            users: [initialState.currentUser]
+        });
+    });
+
+    // Similarly, you can write tests for resetForm...
+});
+
+Please, finish all tests
+ChatGPT
+Sure, let's flesh out the rest of the reducer tests based on the actions available:
+
+javascript
+Copy code
+import reducer, { 
+    setFirstName, 
+    setLastName, 
+    setEmail, 
+    setMessage, 
+    addUser, 
+    resetForm 
+} from './reducer';
+
+describe('userSlice reducer', () => {
+    it('should handle initial state', () => {
+        expect(reducer(undefined, {})).toEqual({
+            currentUser: {
+                firstName: "",
+                lastName: "",
+                email: "",
+                message: ""
+            },
+            users: []
+        });
+    });
+
+    it('should handle setFirstName', () => {
+        expect(
+            reducer({ currentUser: { firstName: "" } }, {
+                type: setFirstName.type,
+                payload: "John"
+            })
+        ).toEqual({ currentUser: { firstName: "John" } });
+    });
+
+    it('should handle setLastName', () => {
+        expect(
+            reducer({ currentUser: { lastName: "" } }, {
+                type: setLastName.type,
+                payload: "Doe"
+            })
+        ).toEqual({ currentUser: { lastName: "Doe" } });
+    });
+
+    it('should handle setEmail', () => {
+        expect(
+            reducer({ currentUser: { email: "" } }, {
+                type: setEmail.type,
+                payload: "john@example.com"
+            })
+        ).toEqual({ currentUser: { email: "john@example.com" } });
+    });
+
+    it('should handle setMessage', () => {
+        expect(
+            reducer({ currentUser: { message: "" } }, {
+                type: setMessage.type,
+                payload: "Hello, World!"
+            })
+        ).toEqual({ currentUser: { message: "Hello, World!" } });
+    });
+    
+    it('should handle addUser', () => {
+        const initialState = {
+            currentUser: {
+                firstName: "John",
+                lastName: "Doe",
+                email: "john@example.com",
+                message: "Hi there"
+            },
+            users: []
+        };
+
+        expect(
+            reducer(initialState, {
+                type: addUser.type
+            })
+        ).toEqual({
+            currentUser: {
+                firstName: "",
+                lastName: "",
+                email: "",
+                message: ""
+            },
+            users: [initialState.currentUser]
+        });
+    });
+
+    it('should handle resetForm', () => {
+        const initialState = {
+            currentUser: {
+                firstName: "John",
+                lastName: "Doe",
+                email: "john@example.com",
+                message: "Hi there"
+            },
+            users: []
+        };
+
+        expect(
+            reducer(initialState, {
+                type: resetForm.type
+            })
+        ).toEqual({
+            currentUser: {
+                firstName: "",
+                lastName: "",
+                email: "",
+                message: ""
+            },
+            users: [] // users array remains unchanged
+        });
+    });
+});
+These tests cover all the actions available in your reducer. Ensure you have Jest and the related testing libraries set up to execute these tests.
