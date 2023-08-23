@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import validator from 'validator';
-import { setFirstName, setLastName, setEmail, setMessage, resetForm } from './reducer';
+import { setFirstName, setLastName, setEmail, setMessage, resetForm, addUser } from './reducer';
 
 const UserForm = () => {
   const dispatch = useDispatch();
-  const userData = useSelector(state => state);  // get the user data from Redux store
+  const userData = useSelector(state => state.currentUser);  // get the user data from Redux store
 
   // Local state for form errors
   const [formErrors, setFormErrors] = useState({
@@ -49,6 +49,7 @@ const UserForm = () => {
     e.preventDefault();
     if (isFormValid()) {
       console.log('Submitted data:', userData); // Do something with the data
+      dispatch(addUser())
       dispatch(resetForm()); // Resetting the form data in the store
       setFormErrors({
         firstName: '',
